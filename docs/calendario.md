@@ -21,7 +21,7 @@
 - De Data Science a MLOps: por qué un modelo en un notebook no es un sistema.
 - Etapas del ciclo de vida: desarrollo, despliegue y operación.
 - Retos de reproducibilidad, escalabilidad y mantenimiento.
-- Panorama del ecosistema de herramientas. Se presenta Metaflow y MLflow como stack del curso.
+- Panorama del ecosistema de herramientas. Se presenta Prefect y MLflow como stack del curso.
 
 ### S2. Jueves 15 de octubre (2 h) · Semana 11
 **Tema:** Versionamiento, entornos y estructura de proyectos
@@ -32,16 +32,16 @@
 
 
 ### S3. Jueves 22 de octubre (2 h) · Semana 12
-**Tema:** Registro de experimentos y reproducibilidad & Pipelines en Metaflow
+**Tema:** Registro de experimentos y reproducibilidad & Pipelines en Prefect
 
 - Registro de experimentos: métricas, parámetros y artefactos.
 - MLflow Tracking: comparación de runs y autolog.
-- Introducción a metaflow.
+- Introducción a Prefect.
 
 **Hito:** el **domingo 25 de octubre, 23:59**, se entrega **A1**.
 
 ### S4. Jueves 29 de octubre (2 h) · Semana 13
-**Tema:** Pipelines en Metaflow
+**Tema:** Pipelines en Prefect
 
 - Concepto de pipeline y modularidad: steps, artifacts y parámetros.
 - Separación entre datos, código y configuración.

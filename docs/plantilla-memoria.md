@@ -8,7 +8,7 @@ Qué se buscaba con la actividad y cómo se relaciona con las actividades anteri
 
 ## 2. Descripción del trabajo
 
-Qué se hizo, en orden lógico. Incluir la estructura del repositorio y los flows de Metaflow implementados.
+Qué se hizo, en orden lógico. Incluir la estructura del repositorio y los flows de Prefect implementados.
 
 ## 3. Decisiones técnicas
 
@@ -17,7 +17,7 @@ Decisiones relevantes y su justificación. Para cada una, indicar las alternativ
 ## 4. Evidencias
 
 - Enlaces o capturas de los runs de MLflow (parámetros, métricas, artefactos).
-- Capturas de Metaflow Cards o salidas de terminal.
+- Capturas de las UIs de Prefect y MLflow o salidas de terminal.
 - Enlaces a commits o ejecuciones de CI cuando aplique.
 
 ## 5. Resultados

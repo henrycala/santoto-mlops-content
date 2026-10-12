@@ -1,4 +1,4 @@
-# Actividades del curso: MLOps con Metaflow y MLflow
+# Actividades del curso: MLOps con Prefect y MLflow
 
 Serie de cuatro actividades con un hilo conductor común. Las actividades 1 a 3 sustentan la actividad 4, que integra el sistema completo.
 
@@ -13,7 +13,7 @@ Las fechas de sesiones y entregas están en el [calendario del curso](./calendar
 
 ## Supuestos generales
 
-- **Stack núcleo:** Metaflow (orquestación de pipelines) y MLflow (tracking, registro y servicio de modelos).
+- **Stack núcleo:** Prefect (orquestación de pipelines) y MLflow (tracking, registro y servicio de modelos).
 - **Herramientas complementarias del temario:** Evidently AI, GitHub Actions o Jenkins y Docker se usan solo donde el módulo las exige.
 - **Datos:** sintéticos y generados por un script con semilla fija. Los estudiantes construyen el modelo desde cero, sin modelos preentrenados ni AutoML.
 
