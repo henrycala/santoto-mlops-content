@@ -1,7 +1,7 @@
 # Actividad 4: Presentación del sistema MLOps end-to-end
 
 **Módulo:** Integración de los módulos 1 a 3
-**Entregable:** repositorio integrado + presentación de slides (15 a 18 diapositivas, 20 minutos de exposición + preguntas)
+**Entregable:** repositorio integrado + presentación de slides
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Presentar el sistema construido en las actividades 1 a 3 como una solución de n
 | Actividad | Aporte a la presentación |
 |-----------|--------------------------|
 | 1 | Estructura del repositorio, datos reproducibles y tracking de experimentos (MLflow) |
-| 2 | Pipeline automatizado (Metaflow), registro de modelos y servicio de inferencia |
+| 2 | Pipeline automatizado (Prefect), registro de modelos y servicio de inferencia |
 | 3 | Monitoreo de drift, reentrenamiento, CI con quality gate y análisis de equidad |
 
 ## Tareas
@@ -22,14 +22,6 @@ Presentar el sistema construido en las actividades 1 a 3 como una solución de n
 3. **Medir los KPIs** técnicos y de negocio definidos en la sección de KPIs.
 4. **Construir la presentación** con la estructura de abajo.
 
-## Estructura de la presentación
-
-La presentación se organiza en cinco bloques, en este orden. Cada bloque responde una pregunta.
-
-1. Bloque A. Caso de negocio (3 slides)
-2. B. Ejecución del proyecto (4 slides)
-3. Bloque C. Operaciones MLOps (3 slides)
-4. Bloque D. KPIs observados (2 slides)
 
 ## Entregables
 

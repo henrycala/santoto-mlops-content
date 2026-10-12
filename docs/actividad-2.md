@@ -10,7 +10,7 @@ Convertir el experimento de la actividad 1 en un pipeline automatizado, con vali
 ## Temas del módulo que cubre
 
 - Concepto de pipeline y modularidad.
-- Orquestación de tareas con Metaflow.
+- Orquestación de tareas con Prefect.
 - Separación entre datos, código y configuración.
 - Evaluación, reentrenamiento y control de versiones de modelos.
 - Serialización de modelos con MLflow Models.
@@ -19,7 +19,7 @@ Convertir el experimento de la actividad 1 en un pipeline automatizado, con vali
 
 ## Tareas
 
-1. **Pipeline completo en Metaflow.** Pasos: `ingesta → validación de datos → preprocesado → entrenamiento → evaluación → registro`.
+1. **Pipeline completo en Prefect.** Pasos: `ingesta → validación de datos → preprocesado → entrenamiento → evaluación → registro`.
 2. **Validación de datos.** Comprobar esquema, tipos, rangos y nulos. Si la validación falla, el pipeline debe detenerse con un error explícito.
 3. **Configuración separada.** Parámetros del pipeline (semilla, tamaño de prueba, hiperparámetros) en un archivo de configuración, no en el código.
 4. **Registro en MLflow Model Registry.** Registrar cada modelo aprobado y asignarle el alias `champion`.
@@ -36,7 +36,7 @@ El mismo caso de la actividad 1. La configuración debe permitir cambiar el mode
 
 ## Entregables
 
-- [ ] Flow de Metaflow con los pasos del pipeline.
+- [ ] Flow de Prefect con los pasos del pipeline.
 - [ ] Validación de datos con fallo controlado y evidencia de al menos un caso de fallo.
 - [ ] Archivo de configuración separado del código.
 - [ ] Modelo registrado en MLflow con alias `champion`.
@@ -49,7 +49,7 @@ El mismo caso de la actividad 1. La configuración debe permitir cambiar el mode
 
 - Documentación especifica:
     - MLFlow: https://mlflow.org/docs/latest/ml/
-    - MLOps platform: https://docs.metaflow.org/introduction/why-metaflow
+    - Prefect (orquestación): https://docs.prefect.io/
     - Control de paquetes - Poetry: https://github.com/python-poetry/poetry
 
 - Lecturas complementarias:

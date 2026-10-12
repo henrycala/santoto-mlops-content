@@ -20,9 +20,9 @@ Construir la base reproducible del proyecto: estructura de código, entorno cont
 1. **Estructura del proyecto.** Crear el repositorio con carpetas `src/`, `flows/`, `configs/`, `tests/`, `notebooks/` y un README que explique cómo ejecutar el proyecto.
 2. **Entorno reproducible.** Fijar versiones de dependencias con `pyproject.toml`
 3. **Datos dummy.** Implementar `generate_data.py` con semilla fija y parámetros documentados. Los datos no se escriben a mano: se generan con el script.
-4. **Primer flow de Metaflow.** Crear un flow con los pasos `start → load/generate → train → end`donde un modelo de machine learning se genere.
+4. **Primer flow de Prefect.** Crear un flow con las tareas `cargar datos → entrenar → resumen`, donde un modelo de machine learning se genere.
 5. **Tracking con MLflow.** Registrar el experimento con parámetros, métricas y artefactos.
-6. **Trazabilidad.** Presentar el experimento en la UI de metaflow
+6. **Trazabilidad.** Presentar el experimento en la UI de MLflow y en la de Prefect
 
 ## Criterio de éxito
 
@@ -37,7 +37,7 @@ Como propuesta ideal, se espera que el estudiante plantee un desafío propio de 
 - [ ] Repositorio Git con estructura definida y README.
 - [ ] Entorno fijado y verificado en una instalación limpia.
 - [ ] Script `generate_data.py` con semilla y documentación de parámetros.
-- [ ] Flow de Metaflow ejecutable con `python flows/<flow>.py run`.
+- [ ] Flow de Prefect ejecutable con `python flows/<flow>.py`.
 - [ ] Memoria 1 completa.
 
 
@@ -47,7 +47,7 @@ Como propuesta ideal, se espera que el estudiante plantee un desafío propio de 
 - Documentación especifica:
     - Version control: https://git-scm.com/book/en/v2
     - MLFlow: https://mlflow.org/docs/latest/ml/
-    - MLOps platform: https://docs.metaflow.org/introduction/why-metaflow
+    - Prefect (orquestación): https://docs.prefect.io/
     - Control de paquetes - Poetry: https://github.com/python-poetry/poetry
 
 - Lecturas complementarias:

@@ -48,7 +48,7 @@ Poner el modelo en condiciones de operación: detectar drift, reentrenar cuando 
 
 - Documentación especifica:
     - MLFlow: https://mlflow.org/docs/latest/ml/
-    - MLOps platform: https://docs.metaflow.org/introduction/why-metaflow
+    - Prefect (orquestación): https://docs.prefect.io/
     - Monitoreo: https://www.evidentlyai.com/
 
 - Lecturas complementarias:
