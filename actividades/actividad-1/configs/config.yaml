@@ -15,5 +15,9 @@ modelo:
     max_iter: 1000
 
 mlflow:
-  tracking_uri: sqlite:///mlflow.db
-  experimento: churn-mlops
+  tracking_uri: http://localhost:5000  # servidor de MLflow de services/. Sin servidor: sqlite:///mlflow.db. MLFLOW_TRACKING_URI, si existe, tiene prioridad
+  experimento: churn-training-mlops    # nombre del experimento donde se agrupan los runs
+  nombre_run: churn-training       # nombre de cada run dentro del experimento
+
+metricas:
+  umbral: 0.5                         # probabilidad a partir de la cual se predice churn (Exited = 1)

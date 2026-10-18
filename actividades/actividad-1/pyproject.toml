@@ -23,7 +23,7 @@ dependencies = [
 
 [tool.poetry]
 package-mode = true
-packages = [{ include = "utils" }, { include = "usecase" }]
+packages = [{ include = "scripts" }]
 
 # Grupo de desarrollo: se instala por defecto con `poetry install`.
 # Para un entorno sin herramientas de desarrollo: `poetry install --without dev`.
