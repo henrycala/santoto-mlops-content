@@ -10,6 +10,7 @@ __pycache__/
 mlruns/
 mlflow.db
 reports/
+lotes/
 
 # Datos del servidor de MLflow en Docker (actividades/actividad-1/mlflow_store/)
 mlflow_store/
@@ -21,3 +22,5 @@ services/metaflow-ui-src*/
 services/metaflow-service/
 services/metaflow-service-*/
 services/ca-base/
+demos/
+.github/
