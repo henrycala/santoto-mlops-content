@@ -20,7 +20,6 @@ from pydantic import BaseModel, Field
 with open("configs/config.yaml", encoding="utf-8") as f:
     cfg = yaml.safe_load(f)
 NOMBRE_MODELO = cfg["registro"]["nombre_modelo"]
-
 mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", cfg["mlflow"]["tracking_uri"]))
 modelo = mlflow.sklearn.load_model(f"models:/{NOMBRE_MODELO}@champion")
 VERSION = MlflowClient().get_model_version_by_alias(NOMBRE_MODELO, "champion").version

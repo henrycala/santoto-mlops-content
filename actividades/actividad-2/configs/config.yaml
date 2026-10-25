@@ -8,11 +8,39 @@ division:
   test_size: 0.2
   random_state: 42          # también se registra como semilla en MLflow
 
-modelo:
-  tipo: logistic_regression   # logistic_regression | gradient_boosting
-  parametros:                 # argumentos del estimador de sklearn
-    C: 1.0
-    max_iter: 1000
+# Conjuntos de features. Cada candidato se entrena con cada uno: un run por combinación.
+#   columnas: ALL para todas las variables, o una lista con los nombres exactos del CSV.
+features:
+  - nombre: all
+    columnas: ALL
+  - nombre: custom
+    columnas:
+      - Age
+      - Balance
+      - NumOfProducts
+      - IsActiveMember
+      - Geography
+
+# Modelos que el flow de entrenamiento compara. Cada uno se entrena con cada conjunto de `features`.
+# Cada run se llama `<nombre_run>-<nombre de features>`. Solo el de mayor AUC se evalúa para champion.
+candidatos:
+  - nombre_run: churn-logreg-c1
+    tipo: logistic_regression
+    parametros:
+      C: 1.0
+      max_iter: 1000
+  - nombre_run: churn-logreg-c01
+    tipo: logistic_regression
+    parametros:
+      C: 0.1
+      max_iter: 1000
+  - nombre_run: churn-gbt
+    tipo: gradient_boosting
+    parametros:
+      n_estimators: 200
+      learning_rate: 0.05
+      max_depth: 3
+      random_state: 42
 
 mlflow:
   tracking_uri: http://localhost:5000  # servidor de MLflow de services/. Sin servidor: sqlite:///mlflow.db. MLFLOW_TRACKING_URI, si existe, tiene prioridad
