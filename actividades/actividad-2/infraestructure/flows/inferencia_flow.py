@@ -49,7 +49,7 @@ def ingesta(cfg):
 @task
 def predecir(modelo, lote, cfg):
     """Calcula la probabilidad de churn y guarda el resultado en un CSV con la fecha de hoy."""
-    # Usa las mismas columnas con las que se entrenó el modelo (según features.yaml en ese momento).
+    # Usa las mismas columnas con las que se entrenó el modelo (según la sección features de config.yaml en ese momento).
     proba = modelo.predict_proba(lote[list(modelo.feature_names_in_)])[:, 1]
     resultado = lote.copy()
     resultado["probabilidad_churn"] = proba

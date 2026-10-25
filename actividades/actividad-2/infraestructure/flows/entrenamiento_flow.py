@@ -1,6 +1,6 @@
 """Actividad 2: pipeline de entrenamiento.
 
-Pasos: cargar datos → entrenar y registrar en MLflow → promover a champion si mejora
+Pasos: cargar datos → entrenar y registrar en MLflow cada candidato de `candidatos` → promover a champion el mejor si mejora
 
 El modelo recibe el alias `champion` solo si su AUC supera `registro.umbral_auc` y el AUC
 del champion actual. Si no, el run queda en MLflow pero el alias no cambia.
@@ -28,7 +28,6 @@ from domain.modelo import OBJETIVO, calcular_metricas, construir_modelo, resolve
 from scripts.load_data import cargar_datos as leer_datos
 
 CONFIG = "configs/config.yaml"
-CONFIG_FEATURES = "configs/features.yaml"
 
 
 @task
@@ -38,10 +37,10 @@ def cargar_datos(ruta):
 
 
 @task
-def entrenar_y_registrar(df, cfg, features_cfg):
+def entrenar_y_registrar(df, cfg, features):
     """Entrena el modelo, calcula sus métricas y registra el run en MLflow. Devuelve (run_id, model_uri, métricas)."""
-    # 1. Partir los datos en entrenamiento y prueba, usando solo las features seleccionadas.
-    numericas, categoricas = resolver_features(features_cfg)
+    # 1. Partir los datos en entrenamiento y prueba, usando solo las features del conjunto.
+    numericas, categoricas = resolver_features(features["columnas"])
     variables = numericas + categoricas
     division = cfg["division"]
     train_df, test_df = train_test_split(
@@ -75,7 +74,7 @@ def entrenar_y_registrar(df, cfg, features_cfg):
                 **parametros,
                 "semilla": division["random_state"],
                 "umbral": umbral,
-                "features": features_cfg["seleccion"],
+                "features": features["nombre"],
                 "n_features": len(variables),
             }
         )
@@ -85,6 +84,9 @@ def entrenar_y_registrar(df, cfg, features_cfg):
             name="model",
             signature=infer_signature(X_test, proba),
             input_example=X_test.head(3),
+            # Gradient boosting guarda árboles de sklearn; skops los marca como no confiables por defecto.
+            # Son nuestros propios modelos entrenados aquí, así que se confía solo en ese tipo.
+            skops_trusted_types=["sklearn.tree._tree.Tree"],
         )
         run_id = run.info.run_id
 
@@ -126,14 +128,29 @@ def entrenamiento_flow():
     with open(CONFIG, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
 
-    with open(CONFIG_FEATURES, encoding="utf-8") as f:
-        features_cfg = yaml.safe_load(f)
-
     df = cargar_datos(cfg["datos"]["ruta"])
-    run_id, model_uri, metricas = entrenar_y_registrar(df, cfg, features_cfg)
-    promover_si_mejora(model_uri, metricas, cfg)
-    print(f"Run de MLflow: {run_id} | AUC = {metricas['auc']:.4f}")
-    return run_id
+
+    # Entrena cada candidato con cada conjunto de features. Cada combinación es un run propio.
+    resultados = []
+    for candidato in cfg["candidatos"]:
+        for features in cfg["features"]:
+            cfg_run = {
+                **cfg,
+                "modelo": {"tipo": candidato["tipo"], "parametros": candidato["parametros"]},
+                "mlflow": {**cfg["mlflow"], "nombre_run": f"{candidato['nombre_run']}-{features['nombre']}"},
+            }
+            run_id, model_uri, metricas = entrenar_y_registrar(df, cfg_run, features)
+            print(
+                f"{candidato['nombre_run']} ({candidato['tipo']}) features={features['nombre']}: "
+                f"AUC = {metricas['auc']:.4f}"
+            )
+            resultados.append((run_id, model_uri, metricas))
+
+    # Solo el mejor candidato (mayor AUC) puede pasar a champion.
+    mejor_run_id, mejor_uri, mejor_metricas = max(resultados, key=lambda r: r[2]["auc"])
+    promover_si_mejora(mejor_uri, mejor_metricas, cfg)
+    print(f"Mejor run de MLflow: {mejor_run_id} | AUC = {mejor_metricas['auc']:.4f}")
+    return mejor_run_id
 
 
 if __name__ == "__main__":

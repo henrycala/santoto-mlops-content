@@ -28,20 +28,15 @@ VARIABLES = NUMERICAS + CATEGORICAS
 OBJETIVO = "Exited"
 
 
-def resolver_features(features_cfg):
-    """Convierte la selección de features.yaml en dos listas: (numericas, categoricas)."""
-    seleccion = features_cfg["seleccion"]
-    if seleccion == "ALL":
+def resolver_features(columnas):
+    """Convierte `columnas` de config.yaml ('ALL' o una lista de nombres) en (numericas, categoricas)."""
+    if columnas == "ALL":
         elegidas = VARIABLES
-    elif seleccion == "NUMERIC":
-        elegidas = NUMERICAS
-    elif seleccion == "CUSTOM":
-        elegidas = features_cfg["custom"]
-        desconocidas = [v for v in elegidas if v not in VARIABLES]
-        if desconocidas:
-            raise ValueError(f"variables desconocidas en 'custom': {desconocidas}")
     else:
-        raise ValueError(f"seleccion '{seleccion}' no válida. Opciones: ALL, NUMERIC, CUSTOM")
+        desconocidas = [v for v in columnas if v not in VARIABLES]
+        if desconocidas:
+            raise ValueError(f"variables desconocidas en 'columnas': {desconocidas}")
+        elegidas = columnas
 
     if not elegidas:
         raise ValueError("la selección de features no tiene ninguna variable")

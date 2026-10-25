@@ -137,7 +137,7 @@ Cualquiera de los dos scripts puede vivir en el repositorio y ejecutarse con `po
 
 MLflow (tracking y registro de modelos) y Prefect (orquestación de flows) se ejecutan desde [`services/`](../services/README.md)
 
-1. Abre Docker Desktop y, desde la ruta `services/`, ejecuta `docker compose up -d`. Si Docker no funciona, usa la opción B de la guía de servicios (sin Docker). No uses las dos a la vez.
+1. Abre Docker Desktop y, desde la ruta `services/`, ejecuta `docker-compose up -d`. Si Docker no funciona, usa la opción B de la guía de servicios (sin Docker). No uses las dos a la vez.
 2. Comprueba que los servicios responden:
    - http://localhost:5000: debe cargar la UI de MLflow.
    - http://localhost:4200: debe cargar la UI de Prefect.
