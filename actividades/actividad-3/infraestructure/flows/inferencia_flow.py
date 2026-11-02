@@ -1,19 +1,22 @@
 """Actividad 3: pipeline de inferencia (se ejecuta cada día, ver infraestructure/flows/desplegar.py).
 
-Pasos: cargar modelo champion → ingesta del lote → predicción → guardar CSV → registrar en MLflow
+Pasos: cargar modelo champion → ingesta del lote (con drift emulado) → predicción → guardar CSV → registrar en MLflow
+
+El lote sale de la parte de prueba del dataset y se le aplica un drift emulado con `inferencia.nivel_drift`
+(ver domain/monitoreo.py). Es una simulación: la pipeline «viene con drift» y el nivel se controla desde config.yaml.
+Una copia del lote puntuado se guarda en `monitoreo.lote_actual`, que leen los flows de drift.
 
 El modelo se busca por el alias `champion`, así que cuando el pipeline de entrenamiento
 asigna un nuevo champion, la inferencia usa ese modelo sin cambiar código.
-El run de inferencia guarda la versión del modelo usada en sus tags, para poder conectarlo
-con el entrenamiento.
+El run de inferencia guarda la versión del modelo usada y el nivel de drift en sus tags.
 
 Requisitos: servicios levantados, un champion registrado (lo registra tu pipeline de entrenamiento)
 y las variables:
     PREFECT_API_URL=http://localhost:4200/api
     MLFLOW_TRACKING_URI=http://localhost:5000
 
-Ejecución de prueba (desde la raíz de actividad-3):
-    poetry run python infraestructure/flows/inferencia_flow.py
+Ejecución (desde la raíz de actividad-3):
+    poetry run python -m infraestructure.flows.inferencia_flow
 """
 import os
 from datetime import date
@@ -24,7 +27,8 @@ import yaml
 from mlflow.tracking import MlflowClient
 from prefect import flow, task
 
-from scripts.load_data import cargar_datos as leer_datos
+from domain.monitoreo import aplicar_drift, dividir
+from scripts.load_data import cargar_datos
 
 CONFIG = "configs/config.yaml"
 
@@ -41,9 +45,16 @@ def cargar_champion(cfg):
 
 @task
 def ingesta(cfg):
-    """Toma un lote de clientes. Aquí se simula con una muestra aleatoria del CSV."""
-    df = leer_datos(cfg["datos"]["ruta"])
-    return df.sample(n=cfg["inferencia"]["tamano_lote"])
+    """Toma un lote de la parte de prueba del dataset y le aplica el drift emulado. Guarda una copia para el monitoreo."""
+    _, prueba = dividir(cargar_datos(cfg["datos"]["ruta"]), cfg["division"])
+    base = prueba.sample(n=cfg["inferencia"]["tamano_lote"], random_state=cfg["division"]["random_state"])
+    lote = aplicar_drift(base, cfg["inferencia"]["nivel_drift"], cfg["division"]["random_state"])
+
+    ruta_lote = Path(cfg["monitoreo"]["lote_actual"])
+    ruta_lote.parent.mkdir(parents=True, exist_ok=True)
+    lote.to_csv(ruta_lote, index=False)
+    print(f"Lote con drift {cfg['inferencia']['nivel_drift']} guardado en {ruta_lote} ({len(lote)} filas)")
+    return lote
 
 
 @task
@@ -65,12 +76,13 @@ def predecir(modelo, lote, cfg):
 
 
 @task
-def registrar_inferencia(version, run_id_entrenamiento, ruta, filas, proba_media):
-    """Crea un run de inferencia con tags que apuntan a la versión del modelo y a su run de entrenamiento."""
+def registrar_inferencia(version, run_id_entrenamiento, nivel_drift, ruta, filas, proba_media):
+    """Crea un run de inferencia con tags que apuntan a la versión del modelo, a su run de entrenamiento y al drift."""
     with mlflow.start_run(run_name=f"inferencia-{date.today().isoformat()}"):
         mlflow.set_tag("fase", "inferencia")
         mlflow.set_tag("modelo_version", version)
         mlflow.set_tag("modelo_run_id", run_id_entrenamiento)
+        mlflow.set_tag("nivel_drift", nivel_drift)
         mlflow.log_metric("filas_predichas", filas)
         mlflow.log_metric("probabilidad_media", proba_media)
         mlflow.log_artifact(ruta)
@@ -85,7 +97,7 @@ def inferencia_flow():
     modelo, version, run_id_entrenamiento = cargar_champion(cfg)
     lote = ingesta(cfg)
     ruta, filas, proba_media = predecir(modelo, lote, cfg)
-    registrar_inferencia(version, run_id_entrenamiento, ruta, filas, proba_media)
+    registrar_inferencia(version, run_id_entrenamiento, cfg["inferencia"]["nivel_drift"], ruta, filas, proba_media)
 
 
 if __name__ == "__main__":

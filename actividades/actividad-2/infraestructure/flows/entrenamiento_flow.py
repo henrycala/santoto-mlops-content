@@ -33,6 +33,7 @@ CONFIG = "configs/config.yaml"
 @task
 def cargar_datos(ruta):
     """Carga el CSV con scripts/load_data.py y valida sus columnas."""
+    print(f"Cargando datos desde {ruta}...")
     return leer_datos(ruta)
 
 
@@ -40,9 +41,11 @@ def cargar_datos(ruta):
 def entrenar_y_registrar(df, cfg, features):
     """Entrena el modelo, calcula sus métricas y registra el run en MLflow. Devuelve (run_id, model_uri, métricas)."""
     # 1. Partir los datos en entrenamiento y prueba, usando solo las features del conjunto.
+    print(f"Entrenando {cfg['modelo']['tipo']} con features={features['nombre']}...")
     numericas, categoricas = resolver_features(features["columnas"])
     variables = numericas + categoricas
     division = cfg["division"]
+    print(f"División train/test: {division['test_size']*100:.0f}% test, semilla {division['random_state']}")
     train_df, test_df = train_test_split(
         df,
         test_size=division["test_size"],
@@ -51,19 +54,26 @@ def entrenar_y_registrar(df, cfg, features):
     )
     X_train, y_train = train_df[variables], train_df[OBJETIVO]
     X_test, y_test = test_df[variables], test_df[OBJETIVO]
+    print(f"Conjunto de entrenamiento: {len(X_train)} filas, {len(variables)} features")
+    print(f"Conjunto de prueba: {len(X_test)} filas")
+    print(f"Proporción de {OBJETIVO}: {y_test.mean():.2%}")
 
     # 2. Crear y entrenar el modelo (preprocesado + estimador).
+    print(f"Creando modelo {cfg['modelo']['tipo']} con parámetros {cfg['modelo'].get('parametros')}")
     tipo = cfg["modelo"]["tipo"]
     parametros = cfg["modelo"].get("parametros") or {}
     modelo = construir_modelo(tipo, parametros, numericas, categoricas)
+    print("Entrenando modelo...")
     modelo.fit(X_train, y_train)
-
+    print("Modelo entrenado")
     # 3. Calcular las métricas sobre el conjunto de prueba.
     umbral = cfg["metricas"]["umbral"]
     proba = modelo.predict_proba(X_test)[:, 1]
     metricas = calcular_metricas(y_test, proba, umbral)
+    print(f"Métricas sobre el conjunto de prueba: {metricas}")
 
     # 4. Registrar el run en MLflow. MLFLOW_TRACKING_URI, si existe, tiene prioridad sobre el YAML.
+    print(f"Registrando run en MLflow (tracking_uri={os.environ.get('MLFLOW_TRACKING_URI', cfg['mlflow']['tracking_uri'])})...")
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", cfg["mlflow"]["tracking_uri"]))
     mlflow.set_experiment(cfg["mlflow"]["experimento"])
     with mlflow.start_run(run_name=cfg["mlflow"]["nombre_run"]) as run:
@@ -89,6 +99,7 @@ def entrenar_y_registrar(df, cfg, features):
             skops_trusted_types=["sklearn.tree._tree.Tree"],
         )
         run_id = run.info.run_id
+        print(f"Run registrado en MLflow: {run_id} | URI del modelo: {info.model_uri}")
 
     return run_id, info.model_uri, metricas
 
@@ -96,26 +107,34 @@ def entrenar_y_registrar(df, cfg, features):
 @task
 def promover_si_mejora(model_uri, metricas, cfg):
     """Asigna el alias champion solo si el AUC supera el mínimo y al champion actual."""
+    print(f"Promoviendo a champion si mejora: AUC={metricas['auc']:.4f} (umbral={cfg['registro']['umbral_auc']})")
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", cfg["mlflow"]["tracking_uri"]))
     client = MlflowClient()
     nombre = cfg["registro"]["nombre_modelo"]
     auc = metricas["auc"]
+    print(f"Conectado a MLflow (tracking_uri={mlflow.get_tracking_uri()}) | Modelo: {nombre}")
 
     if auc < cfg["registro"]["umbral_auc"]:
         print(f"AUC {auc:.4f} por debajo del mínimo {cfg['registro']['umbral_auc']}: no se registra como champion")
         return None
+    else:
+        print(f"AUC {auc:.4f} supera el mínimo {cfg['registro']['umbral_auc']}: se intenta promover a champion")
 
     try:
         champion = client.get_model_version_by_alias(nombre, "champion")
     except MlflowException:
         champion = None  # todavía no existe ningún champion
+    print(f"Champion actual: {champion.version if champion is not None else 'ninguno'}")
 
     if champion is not None:
         auc_champion = client.get_run(champion.run_id).data.metrics["auc"]
         if auc <= auc_champion:
             print(f"AUC {auc:.4f} no supera al champion ({auc_champion:.4f}): el alias no cambia")
             return None
+        else:
+            print(f"AUC {auc:.4f} supera al champion ({auc_champion:.4f}): se registra como champion")
 
+    print(f"Registrando versión {model_uri} como champion...")
     version = mlflow.register_model(model_uri, nombre)
     client.set_registered_model_alias(nombre, "champion", version.version)
     client.set_model_version_tag(nombre, version.version, "estado", "aprobado")
@@ -132,6 +151,7 @@ def entrenamiento_flow():
 
     # Entrena cada candidato con cada conjunto de features. Cada combinación es un run propio.
     resultados = []
+    print(f"Entrenando candidatos: {[c['nombre_run'] for c in cfg['candidatos']]} con features {[f['nombre'] for f in cfg['features']]}")
     for candidato in cfg["candidatos"]:
         for features in cfg["features"]:
             cfg_run = {

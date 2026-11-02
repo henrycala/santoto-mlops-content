@@ -10,9 +10,6 @@ El modelo se carga al arrancar la API. Si el pipeline de entrenamiento asigna un
 champion, hay que reiniciar la API para que lo use.
 """
 import os
-import time
-from datetime import datetime, timezone
-from pathlib import Path
 
 import mlflow
 import pandas as pd
@@ -21,15 +18,11 @@ from fastapi import FastAPI
 from mlflow.tracking import MlflowClient
 from pydantic import BaseModel, Field
 
-from domain.monitoreo import leer_registro, registrar_peticion, resumen_peticiones
-
 
 with open("configs/config.yaml", encoding="utf-8") as f:
     cfg = yaml.safe_load(f)
 NOMBRE_MODELO = cfg["registro"]["nombre_modelo"]
 ALIAS = os.environ.get("MODELO_ALIAS", "champion")
-# Cada petición a /predict se añade a este CSV (ver domain/monitoreo.py).
-REGISTRO = Path(cfg["monitoreo"]["carpeta_reportes"]) / "peticiones.csv"
 
 mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", cfg["mlflow"]["tracking_uri"]))
 modelo = mlflow.sklearn.load_model(f"models:/{NOMBRE_MODELO}@{ALIAS}")
@@ -64,26 +57,11 @@ def health():
 
 @app.post("/predict")
 def predict(cliente: Cliente):
-    inicio = time.perf_counter()
     # Usa las mismas columnas con las que se entrenó el modelo.
     datos = pd.DataFrame([cliente.model_dump(by_alias=True)])[list(modelo.feature_names_in_)]
     proba = float(modelo.predict_proba(datos)[0, 1])
-    respuesta = {
+    return {
         "probabilidad_churn": round(proba, 4),
         "prediccion": int(proba >= 0.5),
         "version_modelo": VERSION,
     }
-    registrar_peticion(REGISTRO, {
-        "fecha": datetime.now(timezone.utc).isoformat(),
-        "latencia_ms": round((time.perf_counter() - inicio) * 1000, 3),
-        "version_modelo": VERSION,
-        "probabilidad": respuesta["probabilidad_churn"],
-        "prediccion": respuesta["prediccion"],
-    })
-    return respuesta
-
-
-@app.get("/monitoreo")
-def monitoreo():
-    """Resumen de las peticiones registradas desde que existe el archivo de registro."""
-    return resumen_peticiones(leer_registro(REGISTRO))

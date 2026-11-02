@@ -1,10 +1,16 @@
-"""Tests de drift y de monitoreo. No necesitan servicios."""
+"""Tests de drift. No necesitan servicios."""
 import numpy as np
 import pandas as pd
 import pytest
 
 from domain.modelo import NUMERICAS, OBJETIVO
-from domain.monitoreo import aplicar_drift, drift_de_target, fraccion_con_drift, registrar_peticion, resumen_peticiones, validar_lote
+from domain.monitoreo import (
+    SUBIDA_TASA_MAXIMA,
+    aplicar_drift,
+    drift_de_target,
+    fraccion_desde_evidently,
+    validar_lote,
+)
 
 
 @pytest.fixture
@@ -19,14 +25,24 @@ def test_drift_cero_no_cambia_los_datos(datos):
     assert aplicar_drift(datos, 0.0).equals(datos)
 
 
+def test_drift_sube_la_tasa_del_objetivo_en_proporcion_al_nivel(datos):
+    tasa = datos[OBJETIVO].mean()
+    lote = aplicar_drift(datos, 0.6)
+    assert lote[OBJETIVO].mean() == pytest.approx(tasa + 0.6 * SUBIDA_TASA_MAXIMA, abs=0.01)
+
+
 def test_drift_cambia_la_fraccion_indicada_de_variables(datos):
     lote = aplicar_drift(datos, 0.6)
     cambiadas = [c for c in NUMERICAS if not np.allclose(lote[c], datos[c])]
     assert len(cambiadas) == round(0.6 * len(NUMERICAS))
 
 
-def test_fraccion_con_drift():
-    assert fraccion_con_drift({"a": True, "b": False, "c": False, "d": True}) == 0.5
+def test_fraccion_desde_evidently():
+    resultado = {"metrics": [
+        {"metric_name": "ValueDrift(column=Age)", "value": 0.5},
+        {"metric_name": "DriftedColumnsCount(drift_share=0.5)", "value": {"count": 7, "share": 0.5}},
+    ]}
+    assert fraccion_desde_evidently(resultado) == 0.5
 
 
 def test_validar_lote_exige_objetivo(datos):
@@ -44,15 +60,3 @@ def test_drift_de_target_no_alerta_con_la_misma_tasa():
     referencia = pd.Series([0] * 800 + [1] * 200)
     lote = pd.Series([0] * 80 + [1] * 20)
     assert drift_de_target(referencia, lote, alfa=0.05)["drift"] is False
-
-
-def test_resumen_de_peticiones_registradas(tmp_path):
-    ruta = tmp_path / "peticiones.csv"
-    for latencia, prediccion in [(2.0, 1), (4.0, 0), (6.0, 1), (8.0, 0)]:
-        registrar_peticion(ruta, {"fecha": "x", "latencia_ms": latencia, "version_modelo": "1",
-                                  "probabilidad": 0.5, "prediccion": prediccion})
-    assert resumen_peticiones(pd.read_csv(ruta)) == {
-        "peticiones": 4,
-        "latencia_media_ms": 5.0,
-        "proporcion_positivas": 0.5,
-    }

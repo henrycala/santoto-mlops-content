@@ -56,14 +56,13 @@ registro:
   umbral_auc: 0.80              # AUC mínimo para ser champion; además debe superar al champion actual
 
 inferencia:
-  tamano_lote: 100              # clientes que se puntúan en cada ejecución diaria
+  tamano_lote: 500              # clientes que se puntúan en cada ejecución
   carpeta_salida: ../data       # relativa a actividades/actividad-3/ (la carpeta del dataset)
+  nivel_drift: 0.6              # emulación de drift: fracción de variables numéricas desplazadas en el lote (0.0 = sin drift)
 
-# Actividad 3: lotes con drift, detección de drift y monitoreo de la API (ver docs/actividad-3.md).
+# Actividad 3: detección de drift (ver docs/actividad-3.md).
 monitoreo:
-  niveles_drift: [0.0, 0.3, 0.6]  # niveles de los lotes de prueba (fracción de variables numéricas desplazadas)
-  tamano_lote: 500                # filas de cada lote generado
-  carpeta_lotes: lotes            # relativa a actividades/actividad-3/ (ignorada por git)
-  umbral_drift: 0.3               # fracción de variables con drift a partir de la cual se emite una alerta
-  alfa_evento: 0.05               # p-valor por debajo del cual el drift del target se considera drift
-  carpeta_reportes: reports       # relativa a actividades/actividad-3/ (ignorada por git)
+  lote_actual: lotes/lote_actual.csv  # lote que puntúa la inferencia; lo leen los flows de drift (relativa a actividad-3/)
+  umbral_drift: 0.3                   # fracción de variables con drift a partir de la cual se emite una alerta
+  alfa_evento: 0.05                   # p-valor por debajo del cual el drift del target se considera drift
+  carpeta_reportes: reports           # relativa a actividades/actividad-3/ (ignorada por git)

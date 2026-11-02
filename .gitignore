@@ -23,4 +23,3 @@ services/metaflow-service/
 services/metaflow-service-*/
 services/ca-base/
 demos/
-.github/

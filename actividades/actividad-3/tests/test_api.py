@@ -2,7 +2,7 @@
 import sys
 from types import SimpleNamespace
 
-import mlflow.sklearn  # noqa: F401  (importarlo aquí permite parchear load_model)
+import mlflow.sklearn
 import mlflow.tracking
 import numpy as np
 import pytest
@@ -26,15 +26,16 @@ class ModeloFalso:
 
 
 @pytest.fixture
-def client(monkeypatch, tmp_path):
-    monkeypatch.setattr("mlflow.sklearn.load_model", lambda uri: ModeloFalso())
-    monkeypatch.setattr("mlflow.tracking.MlflowClient", lambda: SimpleNamespace(
+def client(monkeypatch):
+    # Se parchean los objetos de módulo (no rutas en texto) y después se importa la API:
+    # al importarse, main.py carga el modelo desde MLflow.
+    monkeypatch.setattr(mlflow.sklearn, "load_model", lambda uri: ModeloFalso())
+    monkeypatch.setattr(mlflow.tracking, "MlflowClient", lambda: SimpleNamespace(
         get_model_version_by_alias=lambda nombre, alias: SimpleNamespace(version="7")))
     sys.modules.pop("infraestructure.api.main", None)
 
     import infraestructure.api.main as main
 
-    monkeypatch.setattr(main, "REGISTRO", tmp_path / "peticiones.csv")
     return TestClient(main.app)
 
 
@@ -43,12 +44,3 @@ def test_health_y_predict(client):
     assert client.post("/predict", json=CLIENTE).json() == {
         "probabilidad_churn": 0.7, "prediccion": 1, "version_modelo": "7",
     }
-
-
-def test_cada_prediccion_queda_en_el_monitoreo(client):
-    assert client.get("/monitoreo").json()["peticiones"] == 0
-    client.post("/predict", json=CLIENTE)
-    client.post("/predict", json=CLIENTE)
-    resumen = client.get("/monitoreo").json()
-    assert resumen["peticiones"] == 2
-    assert resumen["proporcion_positivas"] == 1.0
