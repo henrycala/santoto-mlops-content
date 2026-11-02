@@ -1,26 +1,63 @@
-# Actividad 4: Reflexión sobre el sistema MLOps (actividades 1 a 3)
+# Actividad 4: Sistema end-to-end y reflexión
 
 **Módulo:** Integración de los módulos 1 a 3
-**Extensión:** máximo 2 páginas
+**Entregable:** documento de máximo 2 páginas
 
-## 1. Qué implementamos en las actividades 1 a 3
+## Objetivo
 
-**Actividad 1: fundamentos, versionamiento y tracking.** Estructura del repositorio con Poetry y versiones fijadas de las dependencias, para que cualquiera reproduzca el entorno. Caso de uso de churn (abandono de clientes) sobre el dataset `Customer-Churn-Records.csv`, con carga reproducible de los datos. Servicios levantados con Docker Compose (MLflow en `localhost:5000`) y Prefect para orquestar la primera pipeline de entrenamiento.
+Validar el entendimiento y el proceso de principio a fin: qué decisiones se tomaron y qué quedó pendiente.
 
-**Actividad 2: pipeline y empaquetado.** Pipeline de entrenamiento en Prefect que compara tres modelos (regresión logística con dos valores de C y gradient boosting) con dos conjuntos de variables (todas y un subconjunto). Cada combinación se registra como un run en MLflow. Solo el de mayor AUC se evalúa para ser champion: debe superar un AUC mínimo y al champion actual. Pipeline de inferencia que carga el champion desde el Model Registry, y una API con FastAPI (`/health` y `/predict`), más el despliegue del flow en Prefect.
+## Temas del módulo que cubre
 
-**Actividad 3: monitoreo, drift y CI.** Flow de inferencia que puntúa un lote con drift emulado (fracción configurable de variables desplazadas y subida de la tasa de churn). Dos flows de monitoreo sobre ese lote: drift de features con Evidently (reporte HTML y alerta si la fracción de variables con drift supera un umbral) y drift del target con un test chi-cuadrado sobre la tasa de `Exited`. Tests unitarios de la lógica de drift y de la API, ejecutados en GitHub Actions en cada PR. Al cierre de la actividad, la suite tiene 17 tests y pasa en local.
+- Integración de pipelines de entrenamiento, inferencia, monitoreo y CI.
+- Trazabilidad: qué componente produce qué artefacto y dónde queda registrado.
+- Documentación técnica de un sistema de ML.
+- Evaluación crítica del trabajo realizado.
 
-La lógica de drift vive en `domain/` y no depende de MLflow, Prefect ni Evidently, así que se puede probar sin servicios levantados. Los flows solo orquestan.
+## Qué debe entregar el grupo
 
-## 2. Mayores dificultades
+Un documento de reflexión que incluya:
 
-[Completar: los obstáculos reales del grupo, con cómo se resolvieron. Por ejemplo: configuración de servicios, versiones de dependencias, depuración de la API o de los flows, interpretación de los resultados de drift.]
+1. Una narrativa sobre el sistema que construyeron en las actividades 1 a 3 y cómo funciona de principio a fin. No es un informe por actividad: lo importante es cómo se conectan las piezas (datos, entrenamiento, champion, inferencia, API, drift y CI) y qué decisiones tomaron en el camino.
+2. Una sección sobre qué componentes del sistema les causaron mayor dificultad.
+3. Una sección sobre qué temas del curso les hubiera gustado profundizar más.
+4. Qué fue lo más valioso del curso y qué debería mejorar.
 
-## 3. Temas que más gustaron
+Pueden guiarse con estas preguntas, sin seguir un orden fijo:
 
-[Completar: qué parte del módulo les resultó más útil o interesante, y por qué.]
+- ¿Qué hace el sistema hoy de punta a punta? ¿Cómo viaja un dato desde el CSV hasta una alerta de drift?
+- ¿Qué decisiones les costaron más y por qué las tomaron así?
+- ¿Qué trabajo quedó por mejorar, y qué harían con más tiempo?
 
-## 4. Temas que les hubiera gustado profundizar
+## Criterio de éxito
 
-[Completar: temas que quedaron superficiales, por ejemplo: reentrenamiento automático por umbral, equidad, despliegue en la nube, monitoreo en producción.]
+- Otra persona puede leer el documento y entender cómo funciona el sistema.
+- Lo que afirma el documento coincide con lo que hay en el repositorio.
+
+## Entregables
+
+- [ ] Documento de reflexión de máximo 2 páginas.
+- [ ] Evidencias (capturas o enlaces) de los puntos que el documento menciona.
+
+## Recursos:
+- Libro Guía (Capítulos 1 a 9): https://soclibrary.futa.edu.ng/books/Reliable%20Machine%20Learning%20(Chen,%20CathyMurphy,%20Niall%20RichardParisa%20etc.)%20(Z-Library).pdf
+
+- Documentación específica:
+    - Version control: https://git-scm.com/book/en/v2
+    - MLflow: https://mlflow.org/docs/latest/ml/
+    - Prefect (orquestación): https://docs.prefect.io/
+    - Control de paquetes - Poetry: https://github.com/python-poetry/poetry
+    - Monitoreo: https://www.evidentlyai.com/
+
+- Lecturas complementarias:
+    - docs/boocks/mlops-guide.pdf: Una lectura sobre MLOps de IBM
+    - docs\books\2023-10-EB-Big-Book-of-MLOps-2nd-Edition.pdf: MLOps en Databricks
+    - https://learn.microsoft.com/es-es/training/paths/introduction-machine-learn-operations/
+    - https://docs.aws.amazon.com/pdfs/prescriptive-guidance/latest/ml-operations-planning/ml-operations-planning.pdf
+    - https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning?hl=es-419
+    - https://developers.google.com/machine-learning/guides/rules-of-ml?hl=es-419
+
+- Repos interesantes:
+    - https://github.com/dair-ai/MLOPs-Primer
+    - https://ljvmiranda921.github.io/notebook/2020/11/15/data-science-swe/
+    - https://github.com/visenger/awesome-mlops
