@@ -32,6 +32,7 @@ CONFIG = "configs/config.yaml"
 @task
 def cargar_champion(cfg):
     """Carga el modelo con el alias champion. Devuelve el modelo, su número de versión y su run de entrenamiento."""
+    print("Buscando modelo champion en MLflow...")
     nombre = cfg["registro"]["nombre_modelo"]
     version = MlflowClient().get_model_version_by_alias(nombre, "champion")
     modelo = mlflow.sklearn.load_model(f"models:/{nombre}@champion")
@@ -42,6 +43,7 @@ def cargar_champion(cfg):
 @task
 def ingesta(cfg):
     """Toma un lote de clientes. Aquí se simula con una muestra aleatoria del CSV."""
+    print(f"Ingestando lote de {cfg['inferencia']['tamano_lote']} clientes...")
     df = leer_datos(cfg["datos"]["ruta"])
     return df.sample(n=cfg["inferencia"]["tamano_lote"])
 
@@ -50,11 +52,13 @@ def ingesta(cfg):
 def predecir(modelo, lote, cfg):
     """Calcula la probabilidad de churn y guarda el resultado en un CSV con la fecha de hoy."""
     # Usa las mismas columnas con las que se entrenó el modelo (según la sección features de config.yaml en ese momento).
+    print(f"Prediciendo con modelo versión {cfg['registro']['nombre_modelo']}...")
     proba = modelo.predict_proba(lote[list(modelo.feature_names_in_)])[:, 1]
     resultado = lote.copy()
     resultado["probabilidad_churn"] = proba
     resultado["prediccion"] = (proba >= 0.5).astype(int)
 
+    print("Guardando predicciones en CSV...")
     carpeta = Path(cfg["inferencia"]["carpeta_salida"])
     carpeta.mkdir(parents=True, exist_ok=True)
     ruta = carpeta / f"prediccion_{date.today().isoformat()}.csv"
@@ -67,6 +71,7 @@ def predecir(modelo, lote, cfg):
 @task
 def registrar_inferencia(version, run_id_entrenamiento, ruta, filas, proba_media):
     """Crea un run de inferencia con tags que apuntan a la versión del modelo y a su run de entrenamiento."""
+    print(f"Registrando inferencia para modelo versión {version}...")
     with mlflow.start_run(run_name=f"inferencia-{date.today().isoformat()}"):
         mlflow.set_tag("fase", "inferencia")
         mlflow.set_tag("modelo_version", version)
